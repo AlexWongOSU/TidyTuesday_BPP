@@ -1,0 +1,55 @@
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(tidytext)
+library(purrr)
+library(stringr)
+library(lexicon)
+library(wordcloud)
+library(ggrepel)
+
+#Vaccination data that Pat provided
+vaccination_data <- read_csv("vaccination2.csv/vaccination2.csv")
+
+internetslang<- lexicon::hash_internet_slang
+names(internetslang)<- c("word", "slang")
+contractions<- lexicon::key_contractions
+names(contractions)<- c("word", "expanded")
+numbers<- data.frame(word = as.character(0:9))
+sentimental_words<- key_sentiment_jockers
+
+unnested.tweets<- vaccination_data%>%
+  unnest_tokens(word, tweet)
+
+tweet_sentiment<- unnested.tweets%>%
+  inner_join(sentimental_words)%>%
+  anti_join(tidytext::stop_words)%>%
+  anti_join(internetslang)%>%
+  anti_join(contractions)%>%
+  anti_join(numbers)%>%
+  filter(word != "https")%>%
+  filter(word != "http")%>%
+  filter(word != "pic.twitter.com")%>%
+  filter(word != "twitter.com")%>%
+  filter(word != "vaccination")%>%
+  filter(word != "vaccine")%>%
+  filter(word != "vaccines")%>%
+  filter(word != "vaccination")%>%
+  filter(word != "vaccineswork")%>%
+  count(word, value, sort = T)%>%
+  top_n(100)
+  
+  ggplot(tweet_sentiment, aes(x=value, y=n, label = word))+
+  geom_text_repel(segment.alpha = 0, aes(colour = value, 
+                                         size =n))+
+  scale_color_gradient(low="red", high = "green",
+                       guide = guide_colorbar(direction = "horizontal",
+                                              title.position = "top"),
+                       )+
+  scale_size_continuous(range = c(2,13),
+                        guide = F)+
+  ggtitle("Chatterplot of top 100 vaccination tweet words")+
+  xlab("sentiment value")+
+  ylab("count")+
+  theme_minimal()+
+  theme(legend.position = c(0.9,0.90))
