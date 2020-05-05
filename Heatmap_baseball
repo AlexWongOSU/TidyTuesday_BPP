@@ -1,0 +1,24 @@
+library(Lahman)
+library(ggplot2)
+library(dplyr)
+
+data(Batting)
+data(Teams)
+Teamsdata<- Teams%>%
+  filter(yearID>1971)%>%
+  mutate(SOpAB = (SO/AB)*10)%>%
+  mutate(Avg = H/AB)%>%
+  mutate(HRrate = (HR/AB)*100)
+  
+  Kheatplot<- ggplot(Teamsdata, aes(x=yearID, y=franchID, fill = SOpAB))+
+  geom_tile(color = "white", size = 0.35)+
+  scale_x_continuous(expand = c(0,0))+
+  scale_fill_gradient(low="red", high = "green",
+                       guide = guide_colorbar(direction = "vertical",
+                                              title.position = "top",
+                                              guide_legend("K per 10 AB")))+
+  theme_minimal()+
+  theme(panel.grid = element_blank())+
+  ylab("Team name")+
+  xlab("Season")
+Kheatplot
