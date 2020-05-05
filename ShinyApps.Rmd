@@ -1,0 +1,61 @@
+---
+title: "Making a shiny app"
+author: "Alexander Wong"
+date: "4/30/2020"
+output: 
+  rmarkdown::html_document:
+    theme: darkly
+runtime: shiny
+---
+
+# Shiny apps are a cool way to interact and visualize data
+## They require no web development skills! Just R skillz!
+
+Very useful tutorial on making Shiny web apps: <https://shiny.rstudio.com/tutorial/>
+
+Check this link to put Shiny apps into Rmarkdown files to make beautiful interactive documents: <https://shiny.rstudio.com/articles/interactive-docs.html>
+
+Writing Shiny apps in R markdown in a bit different than regular Shiny app writing (it's actually easier!). Be sure to put `runtime: shiny` in the YAML header.
+
+You can also change the look of your document in the YAML header as well.
+
+### It takes some time to learn the process but once you get the work flow it's that easy.
+
+You can use the baseball data or your own data! Come up with a simple app to visualize or interact with your data!
+
+```{r library and data}
+library(shiny)
+library(Lahman)
+library(dplyr)
+ModernTeams<- Lahman::Teams%>%
+    filter(yearID>=1960)
+```
+
+```{r server.R, echo=FALSE}
+titlePanel("Team Stats over the Years")
+selectInput(inputId = "Type",
+            label = "Statistic",
+            choices = names(ModernTeams[,c(9,10,15:40)]))
+
+selectInput(inputId = "team",
+            label = "Team",
+            choices = unique(ModernTeams$name))
+
+        mainPanel(
+           plotOutput("statPlot"),
+           tags$a(href  = "http://www.seanlahman.com/baseball-archive/statistics/", "Data Source: Sean Lahman's Baseball Database")
+        )
+```
+
+```{r index.html, echo=FALSE}
+    SelectedTeams<- reactive({
+        ModernTeams%>%
+            filter(name == input$team)%>%
+            select(yearID, input$Type)
+    })
+
+    output$statPlot <- renderPlot({
+       plot(x=SelectedTeams()[[1]], y=SelectedTeams()[[2]], type = "l", xlab = "Season Year", ylab = input$Type)
+
+    })
+```
